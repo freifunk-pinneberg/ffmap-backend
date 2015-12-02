@@ -2,6 +2,11 @@
 """
 backend.py - ffmap-backend runner
 https://github.com/ffnord/ffmap-backend
+
+Erweiterte Version von Freifunk Pinneberg
+  - Graphiken aus RRD-Daten nur auf Anforderung erzeugen
+  - Verzeichnis für die RRD-Nodedb als Kommandozeilenparameter
+
 """
 import argparse
 import json
@@ -56,7 +61,7 @@ def main(params):
                     'Unparseable value "{0}" in --mesh parameter.'.
                     format(value))
 
-    # read nodedb state from node.json
+    # read nodedb state from nodes.json
     try:
         with open(nodes_fn, 'r') as nodedb_handle:
             nodedb = json.load(nodedb_handle)
@@ -151,15 +156,22 @@ def main(params):
 
     # optional rrd graphs (trigger with --rrd)
     if params['rrd']:
-        script_directory = os.path.dirname(os.path.realpath(__file__))
-        rrd = RRD(os.path.join(script_directory, 'nodedb'),
-                  os.path.join(params['dest_dir'], 'nodes'))
+        if params['nodedb']:
+            rrd = RRD(params['nodedb'], os.path.join(params['dest_dir'], 'nodes'))
+        else:
+            script_directory = os.path.dirname(os.path.realpath(__file__))
+            rrd = RRD(os.path.join(script_directory, 'nodedb'),
+                      os.path.join(params['dest_dir'], 'nodes'))
         rrd.update_database(nodedb['nodes'])
         if params['img']:
             rrd.update_images()
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+
+    # get options from command line
+    parser = argparse.ArgumentParser(
+        description = "Collect data for ffmap: creates json files and "
+                      "optional rrd data and graphs")
 
     parser.add_argument('-a', '--aliases',
                         help='Read aliases from FILE',
@@ -175,13 +187,15 @@ if __name__ == '__main__':
     parser.add_argument('-V', '--vpn', nargs='+', metavar='MAC',
                         help='Assume MAC addresses are part of vpn')
     parser.add_argument('-p', '--prune', metavar='DAYS', type=int,
-                        help='forget nodes offline for at least DAYS')
+                        help='Forget nodes offline for at least DAYS')
     parser.add_argument('--with-rrd', dest='rrd', action='store_true',
                         default=False,
-                        help='enable the collection of RRD data')
+                        help='Enable the collection of RRD data')
+    parser.add_argument('--nodedb', metavar='RRD_DIR', action='store',
+                        help='Directory for node RRD data files')
     parser.add_argument('--with-img', dest='img', action='store_true',
                         default=False,
-                        help='enable the rendering of RRD graphs (cpu '
+                        help='Enable the rendering of RRD graphs (cpu '
                              'intensive)')
 
     options = vars(parser.parse_args())
