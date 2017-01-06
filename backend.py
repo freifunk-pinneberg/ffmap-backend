@@ -6,6 +6,8 @@ https://github.com/ffnord/ffmap-backend
 Erweiterte Version von Freifunk Pinneberg
   - Graphiken aus RRD-Daten nur auf Anforderung erzeugen
   - Verzeichnis für die RRD-Nodedb als Kommandozeilenparameter
+  - Statistikerzeugung korrigiert: Initialisierung und Befüllung
+    zu passenden Zeitpunkten
 
 """
 import argparse
@@ -93,9 +95,8 @@ def main(params):
             nodes.import_nodeinfo(nodedb['nodes'], nodeinfo,
                                   now, assume_online=False)
 
+    # prepare statistics collection
     nodes.reset_statistics(nodedb['nodes'])
-    for alfred in alfred_instances:
-        nodes.import_statistics(nodedb['nodes'], alfred.statistics())
 
     # acquire gwl and visdata for each batman instance
     mesh_info = []
@@ -111,6 +112,10 @@ def main(params):
         nodes.import_vis_clientcount(nodedb['nodes'], vd)
         nodes.mark_vis_data_online(nodedb['nodes'], vd, now)
         nodes.mark_gateways(nodedb['nodes'], gwl)
+
+    # get alfred statistics
+    for alfred in alfred_instances:
+        nodes.import_statistics(nodedb['nodes'], alfred.statistics())
 
     # clear the nodedb from nodes that have not been online in $prune days
     if params['prune']:
@@ -188,12 +193,12 @@ if __name__ == '__main__':
                         help='Assume MAC addresses are part of vpn')
     parser.add_argument('-p', '--prune', metavar='DAYS', type=int,
                         help='Forget nodes offline for at least DAYS')
-    parser.add_argument('--with-rrd', dest='rrd', action='store_true',
+    parser.add_argument('-r', '--with-rrd', dest='rrd', action='store_true',
                         default=False,
                         help='Enable the collection of RRD data')
-    parser.add_argument('--nodedb', metavar='RRD_DIR', action='store',
+    parser.add_argument('-n', '--nodedb', metavar='RRD_DIR', action='store',
                         help='Directory for node RRD data files')
-    parser.add_argument('--with-img', dest='img', action='store_true',
+    parser.add_argument('-i', '--with-img', dest='img', action='store_true',
                         default=False,
                         help='Enable the rendering of RRD graphs (cpu '
                              'intensive)')

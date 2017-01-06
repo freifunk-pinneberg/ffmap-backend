@@ -22,11 +22,6 @@ class RRD(object):
         self.currentTimeInt = (int(time.time()) / 60) * 60
         self.currentTime = str(self.currentTimeInt)
 
-        try:
-            os.stat(self.imagePath)
-        except OSError:
-            os.mkdir(self.imagePath)
-
     def update_database(self, nodes):
         online_nodes = dict(filter(
             lambda d: d[1]['flags']['online'], nodes.items()))
@@ -39,6 +34,12 @@ class RRD(object):
             rrd.update()
 
     def update_images(self):
+        # Create image path if it does not exist
+        try:
+            os.stat(self.imagePath)
+        except OSError:
+            os.mkdir(self.imagePath)
+
         self.globalDb.graph(os.path.join(self.imagePath, "globalGraph.png"),
                             self.displayTimeGlobal)
 
