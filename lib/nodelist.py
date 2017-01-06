@@ -13,11 +13,19 @@ def export_nodelist(now, nodedb):
         node_out["status"] = dict()
         node_out["status"]["online"] = node["flags"]["online"]
 
+        if "firstseen" in node:
+            node_out["status"]["firstcontact"] = node["firstseen"]
+
         if "lastseen" in node:
             node_out["status"]["lastcontact"] = node["lastseen"]
 
         if "clients" in node["statistics"]:
             node_out["status"]["clients"] = node["statistics"]["clients"]
+
+        if "role" in node["nodeinfo"]["system"]:
+            node_out["role"] = node["nodeinfo"]["system"]["role"]
+        else:
+            node_out["role"] = "node"
 
         nodelist.append(node_out)
 
