@@ -20,7 +20,11 @@ class Alfred(object):
         if self.unix_sock:
             cmd.extend(['-s', self.unix_sock])
 
-        output = subprocess.check_output(cmd)
+        # There should not be any warnings which would be sent by cron
+        # every minute. Therefore suppress error output of called program
+        FNULL = open(os.devnull, 'w')
+        output = subprocess.check_output(cmd, stderr=FNULL)
+        close(FNULL)
         return json.loads(output.decode("utf-8")).values()
 
     def nodeinfo(self):
