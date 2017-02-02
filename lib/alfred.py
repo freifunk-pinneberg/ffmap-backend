@@ -24,7 +24,7 @@ class Alfred(object):
         # every minute. Therefore suppress error output of called program
         FNULL = open(os.devnull, 'w')
         output = subprocess.check_output(cmd, stderr=FNULL)
-        close(FNULL)
+        FNULL.close()
         return json.loads(output.decode("utf-8")).values()
 
     def nodeinfo(self):
