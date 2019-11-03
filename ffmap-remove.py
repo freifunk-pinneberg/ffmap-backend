@@ -36,7 +36,7 @@ cfg = {
     'logfile': '/var/log/ffmap.log',
     'loglevel': 2,
     'dest_dir': '/var/lib/ffmap/mapdata',
-    'nodedb': '/var/lib/fmap/nodedb',
+    'nodedb': '/var/lib/ffmap/nodedb',
     'imgpath': '/var/www/meshviewer/stats/img'
 }
 
