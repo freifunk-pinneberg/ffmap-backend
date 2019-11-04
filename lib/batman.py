@@ -22,7 +22,7 @@ class Batman(object):
         self.environ = env
 
         # compile regular expressions only once on startup
-        self.mac_addr_pattern = re.compile(r'(([a-z0-9]{2}:){5}[a-z0-9]{2})')
+        self.mac_addr_pattern = re.compile(r'(([a-f0-9]{2}:){5}[a-f0-9]{2})')
 
     def vis_data(self):
         return self.vis_data_batadv_vis()
