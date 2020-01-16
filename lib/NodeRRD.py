@@ -8,16 +8,13 @@ class NodeRRD(RRD):
     ds_list = [
         DS('upstate', 'GAUGE', 120, 0, 1),
         DS('clients', 'GAUGE', 120, 0, float('NaN')),
+        DS('loadavg', 'GAUGE', 120, 0, float('NaN')),
     ]
     rra_list = [
-        # 2 hours of  1 minute samples
-        RRA('AVERAGE', 0.5, 1, 120),
-        #  5 days  of  5 minute samples
-        RRA('AVERAGE', 0.5, 5, 1440),
-        # 30 days  of  1 hour   samples
-        RRA('AVERAGE', 0.5, 60, 720),
-        #  1 year  of 12 hour   samples
-        RRA('AVERAGE', 0.5, 720, 730),
+        RRA('AVERAGE', 0.5, 1, 120),    #  2 hours of  1 minute samples
+        RRA('AVERAGE', 0.5, 5, 1440),   #  5 days  of  5 minute samples
+        RRA('AVERAGE', 0.5, 60, 720),   # 30 days  of  1 hour   samples
+        RRA('AVERAGE', 0.5, 720, 730),  #  1 year  of 12 hour   samples
     ]
 
     def __init__(self, filename, node=None):
@@ -37,8 +34,13 @@ class NodeRRD(RRD):
 
     # TODO: fix this, python does not support function overloading
     def update(self):
-        super().update({'upstate': int(self.node['flags']['online']),
-                        'clients': self.node['statistics']['clients']})
+        values  = {
+            'upstate': int(self.node['flags']['online']),
+            'clients': self.node['statistics']['clients']
+        }
+        if 'loadavg' in self.node['statistics']:
+            values['loadavg'] = float(self.node['statistics']['loadavg'])
+        super().update(values)
 
     def graph(self, directory, timeframe):
         """
