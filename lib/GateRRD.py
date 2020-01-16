@@ -1,5 +1,5 @@
 """
-RRD for nodes
+RRD for gateways
 """
 
 import os
@@ -8,15 +8,17 @@ import subprocess
 from lib.RRD import DS, RRA, RRD
 
 
-class NodeRRD(RRD):
+class GateRRD(RRD):
     ds_list = [
         DS('upstate', 'GAUGE', 120, 0, 1),
         DS('clients', 'GAUGE', 120, 0, float('NaN')),
         DS('loadavg', 'GAUGE', 120, 0, float('NaN')),
+        DS('leases', 'GAUGE', 120, 0, float('NaN')),       
     ]
     rra_list = [
         RRA('AVERAGE', 0.5, 1, 120),    #  2 hours of  1 minute samples
         RRA('AVERAGE', 0.5, 5, 1440),   #  5 days  of  5 minute samples
+        RRA('AVERAGE', 0.5, 15, 672),   #  7 days  of 15 minute samples
         RRA('AVERAGE', 0.5, 60, 720),   # 30 days  of  1 hour   samples
         RRA('AVERAGE', 0.5, 720, 730),  #  1 year  of 12 hour   samples
     ]
@@ -40,10 +42,15 @@ class NodeRRD(RRD):
     def update(self):
         values  = {
             'upstate': int(self.node['flags']['online']),
-            'clients': self.node['statistics']['clients']
+            'clients': float(self.node['statistics']['clients']),
         }
         if 'loadavg' in self.node['statistics']:
-            values['loadavg'] = float(self.node['statistics']['loadavg'])
+            values['loadavg'] = float(self.node['statistics'].get('loadavg', 0))
+        # Gateways can send the peer count. We use the clients field to store data 
+        if 'peers' in self.node['statistics']:
+            values['clients'] = self.node['statistics']['peers']
+        if 'leases' in self.node['statistics']:
+            values['leases'] = self.node['statistics']['leases']
         super().update(values)
 
     def graph(self, directory, timeframe):

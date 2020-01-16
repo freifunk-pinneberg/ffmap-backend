@@ -4,7 +4,7 @@ import os
 
 from lib.GlobalRRD import GlobalRRD
 from lib.NodeRRD import NodeRRD
-
+from lib.GateRRD import GateRRD
 
 class RRD(object):
     def __init__(self,
@@ -28,9 +28,15 @@ class RRD(object):
         client_count = sum(map(
             lambda d: d['statistics']['clients'], online_nodes.values()))
 
+        # Refresh global database
         self.globalDb.update(len(online_nodes), client_count)
+
+        # Refresh databases for all single nodes
         for node_id, node in online_nodes.items():
-            rrd = NodeRRD(os.path.join(self.dbPath, node_id + '.rrd'), node)
+            if node['flags']['gateway']:
+                rrd = GateRRD(os.path.join(self.dbPath, node_id + '.rrd'), node)
+            else:
+                rrd = NodeRRD(os.path.join(self.dbPath, node_id + '.rrd'), node)
             rrd.update()
 
     def update_images(self):
